@@ -1,3 +1,5 @@
+import sys
+
 def partition(string : str, part_len : int) -> list[str]:
     assert len(string) % part_len == 0
     string_list : list[str] = []
@@ -30,15 +32,13 @@ def count_invalid(number_range : list[str]) -> int:
     s_2 = sum(n for n in range(n_1, n_2 + 1) if is_invalid(n, get_factors(len(str(n)))))
     return (s_1, s_2)
 
-file_name = '2025/input/d02.txt'
 
-with open(file_name, 'r') as file:
-    line = file.readline().strip()
-    tokens = line.split(',')
-    s_0 = 0
-    s_1 = 0
-    for number_range in tokens:
-        counters = count_invalid(number_range)
-        s_0 += counters[0]
-        s_1 += counters[1]
-    print((s_0, s_1))
+line = sys.stdin.readline()
+tokens = line.split(',')
+s_0 = 0
+s_1 = 0
+for number_range in tokens:
+    counters = count_invalid(number_range)
+    s_0 += counters[0]
+    s_1 += counters[1]
+print((s_0, s_1))

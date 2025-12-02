@@ -1,0 +1,84 @@
+#!/usr/bin/bash
+
+# args parsing
+
+if [[ $# -lt 3 ]]; then
+    echo "Usage: $0 <language> <year> <day> [--input-file=<file>]"
+    echo "Supported language: python"
+    echo "Language alias: python [py]"
+    exit 1
+fi
+
+LANGUAGE="$1"
+YEAR="$2"
+DAY=$(printf "d%02d" "$3")
+INPUT_FILE="input/$YEAR/$DAY.txt"
+
+shift 3
+for arg in "$@"; do
+    case "$arg" in
+        --input-file=*)
+            INPUT_FILE="${arg#--input-file=}"
+            ;;
+        *)
+            echo "Unknown option: $arg"
+            exit 2
+            ;;
+    esac
+done
+
+case "$LANGUAGE" in
+    python|py)
+        RUNNER="python3"
+        SCRIPT_PATH="python/$YEAR/$DAY.py"
+        ;;
+    *)
+        echo "Unsupported language: $LANGUAGE"
+        exit 3
+        ;;
+esac
+
+# checks
+
+if ! command -v "$RUNNER" >/dev/null 2>&1; then
+    echo "Runtime missing for $LANGUAGE: '$RUNNER' not found"
+    exit 4
+fi
+
+if [[ ! -f "$SCRIPT_PATH" ]]; then
+    echo "Missing script path: $SCRIPT_PATH"
+    exit 5
+fi
+
+if [[ ! -f "$INPUT_FILE" ]]; then
+    echo "Missing input file: $INPUT_FILE"
+    exit 6
+fi
+
+# command building
+
+RUN_CMD="$RUNNER $SCRIPT_PATH < \"$INPUT_FILE\""
+
+# execute
+
+START=$(date +%s%N)
+OUTPUT=$(eval $RUN_CMD)
+EXIT_CODE=$?
+END=$(date +%s%N)
+ELAPSED_NS=$((END - START))
+ELAPSED_MS=$(echo "scale=3; $ELAPSED_NS / 1000000" | bc -l)
+
+if [[ $EXIT_CODE -ne 0 ]]; then
+    echo "ERROR:"
+    echo "$OUTPUT"
+    exit $EXIT_CODE
+fi
+
+echo "$RUN_CMD"
+echo "LANGUAGE: $LANGUAGE"
+echo "YEAR: $YEAR"
+echo "DAY: $DAY"
+echo
+echo "$OUTPUT"
+echo
+echo "$ELAPSED_MS""ms"
