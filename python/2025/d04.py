@@ -1,54 +1,58 @@
 import sys
 
 
-def is_roll(grid: list[str], i: int, j: int) -> bool:
-    return grid[i][j] == "@"
+def is_roll(grid: list[str], row: int, col: int) -> bool:
+    return grid[row][col] == "@"
 
 
-def remove_roll(grid: list[str], i: int, j: int) -> None:
-    line = grid[i]
-    new_line = line[:j] + "x" + line[j + 1:]
-    grid[i] = new_line
+def remove_roll(grid: list[str], row: int, col: int) -> None:
+    line = grid[row]
+    new_row = line[:col] + "x" + line[col + 1:]
+    grid[row] = new_row
 
 
-def is_roll_accessible(grid: list[str], pos_i: int, pos_j: int) -> bool:
-    adjacent_roll_counter = 0
-    grid_i_max = len(grid)
-    grid_j_max = len(grid[pos_i])
-    for i in range(-1, 2):
-        for j in range(-1, 2):
-            curr_i = pos_i + i
-            curr_j = pos_j + j
+def is_roll_accessible(grid: list[str], row: int, col: int) -> bool:
+    row_number = len(grid)
+    col_number = len(grid[row])
 
-            is_not_same_pos = not (i == 0 and j == 0)
-            is_pos_positive = curr_i >= 0 and curr_j >= 0
-            is_pos_inside_grid = curr_i < grid_i_max and curr_j < grid_j_max
-            is_valid_pos = is_not_same_pos and is_pos_positive and is_pos_inside_grid
-            if is_valid_pos and is_roll(grid, curr_i, curr_j):
-                adjacent_roll_counter += 1
-                if adjacent_roll_counter >= 4:
+    count = 0
+    for di in (-1, 0, 1):
+        for dj in (-1, 0, 1):
+            if di == 0 and dj == 0:
+                continue
+
+            ni, nj = row + di, col + dj
+            if 0 <= ni < row_number and 0 <= nj < col_number and is_roll(grid, ni, nj):
+                count += 1
+                if count >= 4:
                     return False
+
     return True
+
 
 
 def main():
     grid = sys.stdin.read().strip().split("\n")
 
-    s_1 = 0
-    for i in range(len(grid)):
-        for j in range(len(grid[i])):
-            if is_roll(grid, i, j) and is_roll_accessible(grid, i, j):
-                s_1 += 1
+    s_1 = sum(1
+              for i in range(len(grid)) 
+              for j in range(len(grid[i]))
+              if is_roll(grid, i, j) and is_roll_accessible(grid, i, j)
+    )
 
     s_2 = 0
-    s_old = -1
-    while s_2 != s_old:
-        s_old = s_2
-        for i in range(len(grid)):
-            for j in range(len(grid[i])):
-                if is_roll(grid, i, j) and is_roll_accessible(grid, i, j):
-                    s_2 += 1
-                    remove_roll(grid, i, j)
+    while True:
+        removed = [(i, j)
+        for i in range(len(grid))
+        for j in range(len(grid[i]))
+        if is_roll(grid, i, j) and is_roll_accessible(grid, i, j)
+        ]
+
+        if len(removed) == 0: break
+
+        for i, j in removed: remove_roll(grid, i, j)
+
+        s_2 += len(removed)
 
     print((s_1, s_2))
 
